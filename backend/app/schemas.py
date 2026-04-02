@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 class ChatRequest(BaseModel):
     session_id: str | None = None
     message: str = Field(..., min_length=1, max_length=32000)
+    # 可选：前端选择的模型，为 None 时使用服务端默认模型
+    model: str | None = None
 
 
 class MessageOut(BaseModel):

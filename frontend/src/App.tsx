@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createSession,
   deleteSession,
@@ -11,7 +11,7 @@ import {
   type Session,
 } from "./api";
 import "./App.css";
-
+import MarkdownViewer from "./components/MarkdownViewer";
 const STORAGE_KEY = "chat_session_id";
 const SESSION_NOT_FOUND_TEXT = "会话不存在";
 
@@ -20,9 +20,16 @@ export default function App() {
   const [activeId, setActiveId] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
   const [messages, setMessages] = useState<Message[]>([]);
   const [meta, setMeta] = useState<Meta | null>(null);
+  // 当前选中的模型；null 表示使用服务端默认模型
+  const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const refreshSessions = useCallback(async () => {
     const list = await listSessions();
@@ -30,20 +37,28 @@ export default function App() {
     return list;
   }, []);
 
+  // 判断是否为"会话不存在"错误
   const isSessionNotFoundError = (e: unknown) => {
     return String(e).includes(SESSION_NOT_FOUND_TEXT);
   };
 
+  // 初始加载会话列表
   useEffect(() => {
     refreshSessions().catch((e) => setErr(String(e)));
   }, [refreshSessions]);
 
+  // 加载后端元信息（含可选模型列表），并将默认模型设为初始选中值
   useEffect(() => {
     getMeta()
-      .then(setMeta)
+      .then((m) => {
+        setMeta(m);
+        // 若尚未选择模型，默认使用服务端配置的模型
+        setSelectedModel((prev) => prev ?? m.model);
+      })
       .catch(() => setMeta(null));
   }, []);
 
+  // 切换或加载会话时拉取消息列表
   useEffect(() => {
     if (!activeId) {
       setMessages([]);
@@ -54,6 +69,7 @@ export default function App() {
       .then(setMessages)
       .catch(async (e) => {
         if (isSessionNotFoundError(e)) {
+          // 会话已被删除，清理本地状态
           setActiveId(null);
           localStorage.removeItem(STORAGE_KEY);
           setMessages([]);
@@ -108,7 +124,8 @@ export default function App() {
     setLoading(true);
     setInput("");
     try {
-      const res = await sendChat(text, activeId);
+      // 将当前选中模型一并发送给后端；null 时后端使用默认模型
+      const res = await sendChat(text, activeId, selectedModel);
       setActiveId(res.session_id);
       setMessages(res.messages);
       await refreshSessions();
@@ -127,6 +144,7 @@ export default function App() {
     }
   };
 
+  // Enter 发送，Shift+Enter 换行
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -164,7 +182,24 @@ export default function App() {
         </ul>
       </aside>
       <main className="chat">
-        {meta && <div className="banner meta">当前模型：{meta.model}</div>}
+        {/* 模型信息栏：显示当前选中模型，并提供下拉切换 */}
+        {meta && (
+          <div className="banner meta">
+            <span className="meta-label">模型：</span>
+            <select
+              className="model-select"
+              value={selectedModel ?? meta.model}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              disabled={loading}
+            >
+              {meta.models.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         {err && <div className="banner error">{err}</div>}
         <div className="messages">
           {messages.length === 0 && (
@@ -177,9 +212,11 @@ export default function App() {
           {messages.map((m) => (
             <div key={m.id} className={`bubble ${m.role}`}>
               <div className="role">{m.role === "user" ? "你" : "助手"}</div>
-              <div className="text">{m.content}</div>
+              {/* <div className="text">{m.content}</div> */}
+              <MarkdownViewer content={m.content} />
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
         <div className="composer">
           <textarea

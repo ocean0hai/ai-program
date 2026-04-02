@@ -1,0 +1,20 @@
+{
+  "node_port": 8001,
+  "cors_origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
+  "history_limit": 30,
+  "node_data_file": "./data/chat_memory.json",
+  "database_url": "sqlite:///./data/chat_memory.db",
+  "models": [
+    {
+      "name": "glm-4.7-flash",
+      "api_key": "0b8dd75bbc974cf789864048cb50ec40.exH8khSNaVZp2Ggk",
+      "base_url": "https://open.bigmodel.cn/api/paas/v4",
+      "default": true
+    },
+    {
+      "name": "LongCat-Flash-Chat",
+      "api_key": "ak_2aH98V2Vf3yp4oU5mQ6No3Lw7jr2g",
+      "base_url": "https://api.longcat.chat/openai"
+    }
+  ]
+}

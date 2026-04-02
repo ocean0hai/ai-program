@@ -6,6 +6,7 @@ const {
   historyLimit,
   openaiBaseUrl,
   openaiModel,
+  availableModels,
 } = require("./config");
 const {
   createSession,
@@ -27,9 +28,11 @@ app.get("/health", (_req, res) => {
 });
 
 app.get("/api/meta", (_req, res) => {
+  // 返回默认模型、接口地址及前端可选的模型列表
   res.json({
     model: openaiModel,
     base_url: openaiBaseUrl,
+    models: availableModels,
   });
 });
 
@@ -88,7 +91,9 @@ app.post("/api/chat", async (req, res) => {
       .filter((m) => ["user", "assistant", "system"].includes(m.role))
       .map((m) => ({ role: m.role, content: m.content }));
 
-    const reply = await completeChat(llmMessages);
+    // 将前端选择的模型（若有）传入 LLM 调用，覆盖服务端默认值
+    const model = req.body?.model || null;
+    const reply = await completeChat(llmMessages, model);
     addMessage(sessionId, "assistant", reply);
 
     updateSessionTitleIfNew(sessionId, text.length > 40 ? `${text.slice(0, 40)}...` : text);

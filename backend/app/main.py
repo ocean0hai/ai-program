@@ -18,7 +18,7 @@ app = FastAPI(title="Chat Memory API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,7 +37,12 @@ def health():
 
 @app.get("/api/meta")
 def meta():
-    return {"model": settings.openai_model, "base_url": settings.openai_base_url}
+    """返回当前后端配置的模型信息及可用模型列表。"""
+    return {
+        "model": settings.openai_model,
+        "base_url": settings.get_model_config(settings.openai_model)["base_url"],
+        "models": settings.get_model_list(),
+    }
 
 
 @app.get("/api/sessions", response_model=list[SessionOut])
@@ -108,7 +113,8 @@ async def chat(body: ChatRequest, db: Session = Depends(get_db)):
     recent = list(reversed(recent))
 
     llm_messages = [{"role": m.role, "content": m.content} for m in recent if m.role in ("user", "assistant", "system")]
-    reply_text = await complete_chat(llm_messages)
+    # 将前端选择的模型（若有）传入 LLM 调用，覆盖服务端默认值
+    reply_text = await complete_chat(llm_messages, model=body.model)
 
     asst = models.Message(session_id=sess.id, role="assistant", content=reply_text)
     db.add(asst)

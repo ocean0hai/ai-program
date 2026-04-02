@@ -1,25 +1,37 @@
 ﻿const axios = require("axios");
-const { openaiApiKey, openaiBaseUrl, openaiModel } = require("./config");
+const { openaiModel, getModelConfig } = require("./config");
 
-async function completeChat(messages) {
-  if (!openaiApiKey) {
+/**
+ * 调用 OpenAI 兼容接口获取模型回复。
+ *
+ * @param {Array<{role: string, content: string}>} messages - 对话历史
+ * @param {string|null} model - 本次使用的模型名称；为空时使用配置默认值
+ * @returns {Promise<string>} 模型回复文本
+ */
+async function completeChat(messages, model) {
+  // 优先使用调用方指定的模型，否则回退到配置默认值
+  const effectiveModel = (model || "").trim() || openaiModel;
+  const { apiKey, baseUrl } = getModelConfig(effectiveModel);
+
+  // 未配置 API Key 时进入演示模式
+  if (!apiKey) {
     const lastUser = [...messages].reverse().find((m) => m.role === "user");
     const text = lastUser ? lastUser.content : "";
     const short = text.length > 500 ? `${text.slice(0, 500)}...` : text;
-    return `[演示模式] 未配置 OPENAI_API_KEY。你的消息：\n「${short}」\n\n在 backend-node/.env 中设置 OPENAI_API_KEY 后即可调用真实模型。`;
+    return `[演示模式] 模型 "${effectiveModel}" 未配置 api_key。你的消息：\n「${short}」\n\n在 config.json 中为该模型设置 api_key 后即可调用真实模型。`;
   }
 
   const resp = await axios.post(
-    `${openaiBaseUrl.replace(/\/$/, "")}/chat/completions`,
+    `${baseUrl.replace(/\/$/, "")}/chat/completions`,
     {
-      model: openaiModel,
+      model: effectiveModel,
       messages,
       temperature: 0.7,
     },
     {
       timeout: 120000,
       headers: {
-        Authorization: `Bearer ${openaiApiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
     }
