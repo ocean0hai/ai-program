@@ -1,4 +1,37 @@
-node_modules
-packages/**/node_modules
-**/dist
-pnpm-lock.yaml
+## Node
+node_modules/
+packages/**/node_modules/
+**/dist/
+
+## Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+## Env (commit *.env.example, ignore real secrets)
+# **/.env
+# !.env.example
+# !**/.env.example
+
+## Local data / runtime artifacts
+**/data/
+!**/data/.gitkeep
+
+## rag-local specific (vector db + uploads)
+rag-local/data/chroma/
+rag-local/data/uploads/
+
+## OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+## Lockfiles (optional)
+# pnpm-lock.yaml

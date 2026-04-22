@@ -16,5 +16,32 @@
       "api_key": "ak_2aH98V2Vf3yp4oU5mQ6No3Lw7jr2g",
       "base_url": "https://api.longcat.chat/openai"
     }
-  ]
+  ],
+  "rag_local": {
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "chroma_dir": "./rag-local/data/chroma",
+    "default_llm": "ollama-qwen2.5-7b",
+    "llm_models": [
+      {
+        "name": "ollama-qwen2.5-7b",
+        "provider": "ollama",
+        "base_url": "http://127.0.0.1:11434",
+        "model": "qwen2.5:7b-instruct",
+        "default": true
+      },
+      {
+        "name": "ollama-llama3.1-8b",
+        "provider": "ollama",
+        "base_url": "http://127.0.0.1:11434",
+        "model": "llama3.1:8b-instruct"
+      }
+    ],
+    "retrieval": {
+      "top_k_default": 5
+    },
+    "splitter": {
+      "chunk_size": 900,
+      "chunk_overlap": 150
+    }
+  }
 }
