@@ -19,6 +19,10 @@ async def chat(*, system: str, user: str, llm_model: str | None = None) -> str:
     if provider != "ollama":
         raise ValueError(f"暂不支持的 provider: {provider}")
 
+    # base_url/model 的来源优先级：
+    # 1) 请求指定的 llm_model（config.json 中匹配到的条目）
+    # 2) config.json 的 default_llm
+    # 3) rag-local/.env 的兜底配置
     base_url = (resolved.base_url if resolved else None) or settings.ollama_base_url
     model = (resolved.model if resolved else None) or settings.ollama_model
 

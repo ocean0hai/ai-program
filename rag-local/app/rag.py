@@ -16,6 +16,9 @@ class IngestResult:
 
 
 def _make_id(source: str, chunk_index: int, text: str) -> str:
+    # 用内容哈希做 chunk id 的目的：
+    # - 同一份文档重复入库时，id 稳定，可被 upsert 覆盖（避免无限重复堆积）
+    # - chunk_index + text 能区分相同文件的不同片段
     h = hashlib.sha1(f"{source}::{chunk_index}::{text}".encode("utf-8", errors="ignore")).hexdigest()
     return h
 

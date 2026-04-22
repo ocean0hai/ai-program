@@ -34,6 +34,13 @@ def _read_docx(path: Path) -> str:
 
 
 def load_file(path: str | Path) -> LoadedDoc:
+    """
+    单文件加载器（最小实现）。
+
+    约定：
+    - `source` 保存文件路径（后续可替换为 URL、对象存储 key、数据库主键等）
+    - 若文本为空直接报错，避免向量库里塞入大量空 chunk
+    """
     p = Path(path)
     if not p.exists() or not p.is_file():
         raise FileNotFoundError(str(p))

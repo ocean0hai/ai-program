@@ -1,5 +1,17 @@
 from __future__ import annotations
 
+"""
+运行时配置读取（根目录 config.json）。
+
+为什么要单独做一层 runtime config：
+- 你希望“随时切换本地模型”，这属于运行时开关，适合放在仓库统一配置 `config.json`
+- 但 `rag-local/.env` 仍可作为兜底（例如仅运行子目录、不带根配置时）
+
+约定：
+- 根目录 `config.json` 的 `rag_local.llm_models` 用于声明可选 LLM
+- 请求里传 `llm_model`（即 name）可覆盖默认值
+"""
+
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,11 +27,13 @@ class LlmConfig:
 
 
 def _repo_root_from_here() -> Path:
+    # 这里通过当前文件路径定位仓库根目录，避免依赖工作目录（cwd）。
     # rag-local/app -> rag-local -> repo root
     return Path(__file__).resolve().parents[2]
 
 
 def load_repo_config() -> dict[str, Any]:
+    """读取仓库根目录的 `config.json`，不存在则返回空 dict。"""
     cfg_path = _repo_root_from_here() / "config.json"
     if not cfg_path.exists():
         return {}
@@ -38,6 +52,7 @@ def get_default_llm_name() -> str | None:
 
 
 def list_llms() -> list[LlmConfig]:
+    """列出 `config.json -> rag_local.llm_models` 中声明的 LLM。"""
     rag = rag_section()
     items = rag.get("llm_models") or []
     out: list[LlmConfig] = []
@@ -58,6 +73,12 @@ def list_llms() -> list[LlmConfig]:
 
 
 def resolve_llm(name: str | None) -> LlmConfig | None:
+    """
+    解析最终使用的 LLM：
+    - 若传入 name，则优先按 name 精确匹配
+    - 否则使用 rag_local.default_llm
+    - 再否则返回列表中的第一个
+    """
     llms = list_llms()
     if not llms:
         return None

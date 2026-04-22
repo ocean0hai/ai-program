@@ -11,6 +11,11 @@ def split_text_recursive(
     一个轻量的递归字符切分器：
     - 先按大分隔符切，再逐步降级分隔符
     - 最终按固定窗口切分并加 overlap
+
+    设计取舍：
+    - 不引入额外依赖（如 LangChain），方便你“从 0 到 1”理解与改造
+    - 优先保持段落/句子边界，尽量减少“切断语义”的情况
+    - 当文本没有合适分隔符或片段过长时，才降级到硬窗口切分
     """
     t = (text or "").strip()
     if not t:
@@ -20,6 +25,7 @@ def split_text_recursive(
     if chunk_overlap < 0:
         chunk_overlap = 0
     if chunk_overlap >= chunk_size:
+        # overlap 过大容易导致有效信息密度下降，这里做一个保守降级，避免无限重叠。
         chunk_overlap = max(0, chunk_size // 5)
 
     def merge_with_overlap(parts: list[str]) -> list[str]:

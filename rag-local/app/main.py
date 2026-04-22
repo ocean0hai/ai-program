@@ -27,6 +27,13 @@ async def api_ingest(
     collection: str = "default",
     files: list[UploadFile] = File(...),
 ):
+    """
+    入库接口（multipart/form-data）。
+
+    说明：
+    - 先把上传文件落盘到 `./data/uploads`，再走统一的 loader（保持与 ingest_folder 脚本一致）
+    - 生产环境可替换为对象存储/临时目录，并增加文件大小/类型白名单
+    """
     if not files:
         raise HTTPException(400, "请上传文件")
 
@@ -47,6 +54,12 @@ async def api_ingest(
 
 @app.post("/api/query", response_model=QueryResponse)
 async def api_query(body: QueryRequest):
+    """
+    查询接口：
+    - 先检索 top_k 个片段
+    - 再把片段拼进 Prompt，交给本地 LLM（Ollama）生成答案
+    - 通过 body.llm_model 可以随时切换 config.json 声明的本地模型
+    """
     q = body.query.strip()
     if not q:
         raise HTTPException(400, "query 不能为空")
