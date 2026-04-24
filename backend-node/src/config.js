@@ -41,7 +41,7 @@ module.exports = {
   port: cfg.node_port || 8001,
   corsOrigins: Array.isArray(cfg.cors_origins)
     ? cfg.cors_origins
-    : ["http://localhost:5173", "http://127.0.0.1:5173"],
+    : ["http://localhost:8080", "http://127.0.0.1:8080"],
   openaiModel: defaultModel,
   availableModels,
   historyLimit: cfg.history_limit || 30,

@@ -1,4 +1,4 @@
-﻿# 带记忆的聊天机器人（前后端分离）
+# 带记忆的聊天机器人（前后端分离）
 
 ## 结构
 
@@ -20,7 +20,7 @@ python -m venv .venv
 pip install -r requirements.txt
 copy .env.example .env
 # 编辑 .env，按需填写 OPENAI_API_KEY
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8020
 ```
 
 - 未配置 `OPENAI_API_KEY` 时返回演示回复，仍会把对话写入数据库作为「记忆」。
@@ -48,7 +48,7 @@ npm install
 npm run dev
 ```
 
-默认前端代理指向 Python 后端 `http://127.0.0.1:8000`。若改接 Node 后端，可在 `frontend/vite.config.ts` 将代理目标改为 `http://127.0.0.1:8001`。
+前端开发服务默认 **http://localhost:8080**，Vite 代理指向 Python 后端 `http://127.0.0.1:8020`。若改接 Node 后端，可在 `frontend/vite.config.ts` 将代理目标改为 `http://127.0.0.1:8001`。
 
 ## API 摘要
 

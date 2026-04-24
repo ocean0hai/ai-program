@@ -21,7 +21,7 @@ class Settings:
     """运行时配置的只读视图（从 config.json 解析得到）。"""
     models: list[dict] = _models
     openai_model: str = _default_model_obj.get("name", "gpt-4o-mini")
-    cors_origins: list[str] = _cfg.get("cors_origins", ["http://localhost:5173", "http://127.0.0.1:5173"])
+    cors_origins: list[str] = _cfg.get("cors_origins", ["http://localhost:8080", "http://127.0.0.1:8080"])
     database_url: str = _cfg.get("database_url", "sqlite:///./data/chat_memory.db")
     history_limit: int = _cfg.get("history_limit", 30)
 
